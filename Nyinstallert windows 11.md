@@ -1,28 +1,25 @@
-Oppdatering av Windows 11
-    - Ikke installer  KB5051987
-        - https://answers.microsoft.com/en-us/windows/forum/all/kb5041587-update-literally-ruined-my-os/36a39cd0-c4c0-4938-9593-606868e879e4?page=1
-        - Tving installer de andre og restart et par ganger. Den kommer randomly som innstallert etter du intallerer de andre kumulative oppdateringene uten å ødelegge systemet.
+Finn iso installer uten bloat fra windows på lenken:
+
+Lag to brukere:
+Dev og student.
+
 Chrome -> Logg in på alt -> gå til alle sider som har cookie spørsmål.
-Avinstaller Northon og (installer evt eget antivirusprogram etter pcen er satt opp, eller ikke)
-Finn ut hvordan man omvender fn tasten for å få rask tilgang til fn tastene.
-Cuda
-    Ikke last ned VS2022 17.13.0  Den krasher cuda og systemet blir broken. mulig det fikses senere.
-    Installer VS2019 ikke oppdater.
-    Installer cuda. cuda installerer nyere modell av driveren enn gforce experience.
-    evt oppdater
-geforce experience(installer hvis ikke, forutsatt nvidia grafikkort - oppdater til 2 ganger så får du forslag om å bytte til nvidia app) → innstillinger → spill → deaktiver opptak og opplasting
-    I geforce experience: innstillinger → generelt → deaktiver "start opp med windows"
-    I geforce experience: innstillinger -> generelt -> deaktiver "Overlegg i spill"
+
+Finn ut hvordan man omvender fn tasten for å få rask tilgang til f tastene.(og sc2)
+Ingen cuda i Winblows, har det i NIX
+
+Nvidia App
+
 Instillinger -> skjerm -> lysstyrke og farge
 Innstillinger -> System -> Strøm og dvalemodus -> Avanserte
 Fjern bloatware og unødvendige apper
 Kontrollpanel → Lyd → Lyder → Ingen lyder → OK
-Kjør (Win + R) → sysdm.cpl → Avansert → Ytelse → Innstillinger → Juster for best ytelse → Bruk & OK
-Desverre er instillingen for bakgrunnskjøring inne på hver app i Windows 11, så du må gå inn i hver relevant app og deaktivere bakgrunnskjøring.
+Kjør (Win + R) → sysdm.cpl → Avansert → Ytelse → Innstillinger → Juster for best ytelse(fjern: animasjoner, skygge og fade effects) → Bruk & OK
+Dessverre er innstillingen for bakgrunds-kjøring inne på hver app i Windows 11, så du må gå inn i hver relevant app og deaktivere.
 Ctrl + Shift + Esc → Oppgavebehandling → Oppstart → Høyreklikk app → Deaktiver
 Innstillinger → System → Varslinger → Skru av varsler
 Innstillinger → Tilpasning → Farger → Gjennomsiktighet av
-Installer: Java → LaTeX → VS Code → Python → Git → Anaconda → Spotify → Discord → Steam → Battle.net → Office 365 → Zoom → Teams → Slack → OBS → VLC → Blender → GIMP → Audacity -> virtualbox
+Installer: Java → LaTeX → VS Code → Python → Git → Spotify → Discord → Steam → Battle.net → sc2 -> Zoom → Teams → Slack → OBS → VLC → Blender → GIMP → Audacity -> MSI Center
 Instillinger -> Personvern og instillinger -> Søketilatelser -> La søkeapper vise resultater -> Av
 evt innstillingsknapp i oppgavemenyen
 evt slå på bedre indeksering
@@ -52,8 +49,6 @@ foreach ($App in $BloatwareApps) { Get-AppxPackage $App | Remove-AppxPackage }
 
 taskschd.msc -> Microsoft -> XblGameSave -> Disable #XBOX åpner seg hver gang pcen blir inaktiv for å sjekke om den skal lagre spill og er hardkodet til os'et.
 
-
-
 deaktiver filtertaster hotkey
 deaktiver trege taster hotkey
 slå av pekerpresisjon
@@ -61,4 +56,45 @@ slå av pekerpresisjon
 Instillinger -> System -> Fleroppgavekjøring -> ikke vis faner når en trykker alt tab.
 
 Installer -> power toys -> og fjern popup spam knapper som ikke er ønskelig. Coopilot knappen som ertatter ctrl knappen.
+Disable Widgets
+Disable Copilot if you don't use it.
+Disable Game DVR
+- Settings
+- Gaming
+- Captures
 
+enable system restore
+
+enable bitlocker 
+
+Tailscale
+
+Set PowerShell 7 as default in w terminal
+
+Enable Developer Mode -> Settings → System → For developers
+
+
+Git git config --global user.name ""
+git config --global user.email ""
+
+Enhanced indexing off
+
+OneDrive uninstall
+
+Refreshrate check
+
+
+Windows power plan -> max
+
+NVIDIA Control Panel
+
+For SC2 specifically I'd test:
+
+Power Management → Prefer maximum performance
+Low Latency Mode → Off / On / Ultra (benchmark all three)
+V-Sync → Off
+Maximum Frame Rate → Off (unless needed)
+G-SYNC configuration if your display supports it
+
+Student bruker
+Office 365
