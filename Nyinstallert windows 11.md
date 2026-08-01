@@ -634,6 +634,7 @@ $Apps = @(
     "Microsoft.Teams",
     "Zoom.Zoom",
     "SlackTechnologies.Slack",
+    "Zotero.Zotero",
     "Spotify.Spotify", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
     "WhatsApp.WhatsApp", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
     "Discord.Discord" # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
