@@ -98,7 +98,7 @@ $Apps = @(
     "OBSProject.OBSStudio", # # self explanatory
     "Python.Python.3.13", # Anbefalt 2026-2027, sjekk versjon støtte senere
     "Tailscale.Tailscale", # Egen cloud og remote desktop osv. skalerer inn startup
-    "VideoLAN.VLC",               # Mediespiller, mest av nostalgiske grunner
+    "VideoLAN.VLC"               # Mediespiller, mest av nostalgiske grunner
 )
 ```
 
@@ -152,7 +152,7 @@ else {
 }
 ```
 
-# Strømisntillinger og annet
+## Strømisntillinger og annet
 ```powershell
 # Slå aldri av skjermen
 powercfg /change monitor-timeout-ac 0
@@ -184,10 +184,6 @@ Disable-ComputerRestore -Drive "C:\"
 ## Globale instillinger
 ```powershell
 $MachineRegistry = @{
-    "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" = @{
-        AllowDevelopmentWithoutDevLicense = 1 # Developer Mode
-    }
-
     "HKLM:\SOFTWARE\Policies\Microsoft\Dsh" = @{
         AllowNewsAndInterests = 0 # Widgets av
     }
@@ -234,13 +230,12 @@ foreach ($Path in $MachineRegistry.Keys) {
     }
 }
 ```
+## Kan ikke automatiseres (tilganger evt annet)
+Developer Mode -> Settings → System → For developers → Developer Mode
 
+- MSI Center (<https://www.msi.com/Landing/msi-center/download>)
+- Nvidia App (<https://www.nvidia.com/software/nvidia-app/>)
 
-Installer manuelt
-- TEX
-- MSI
-- sett opp mobil deling, 
-- Nvidia App
 
 ## Brukere !!
 
@@ -993,7 +988,8 @@ Fix bios settings
 
 # Todo
 ## Konfigurering
-
+- TeX Live (<https://www.tug.org/texlive/>)
+- Sett opp mobil deling, (<https://support.microsoft.com/windows/apps/phonelink/phone-link-requirements-and-setup>)
 
 - Finn ut hvordan man omvender fn tasten for å få rask tilgang til f tastene.(og sc2) - Bios
 - Kjør (Win + R) → sysdm.cpl → Avansert → Ytelse → Innstillinger → Juster for best ytelse(fjern: animasjoner, skygge og fade effects) → Bruk & OK
