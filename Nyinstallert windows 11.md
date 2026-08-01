@@ -1,6 +1,6 @@
 # Widnows 11 survival guide
 Denne guiden er litt blanding av blog, privat og startup. Vil splittes senere, derfor skal jeg jobbe litt godt med denne først siden den blir til tre senere.
-
+Husk å restart etter å ha kjørt kode herifra. Nesten alltid, så bare alltid gjør det.
 
 Finn iso installer uten bloat fra windows
 
@@ -11,8 +11,10 @@ Finn iso installer uten bloat fra windows
 - Restart
 - Windows Update
 
+## Maskinomfattende oppsett
 
-**Dette installeres på alle brukere** ADMIN
+Kjøres som administrator før de øvrige brukerkontoene konfigureres.
+
 ## Debloat skript
 *Debloat regime: Fjerner kun programmer som* 
 1. Skaper støy eller reklame.
@@ -86,7 +88,6 @@ Disse kan installeres før flere brukerkontoer opprettes.
 
 ```powershell
 $Apps = @(
-    "Discord.Discord",
     "EclipseAdoptium.Temurin.21.JDK", # Anbefalt 2026-2027, sjekk versjon støtte senere
     "Google.Chrome",              # Bytt denne om du foretrekker noe annet
     "Git.Git",                    # Versjonskontroll
@@ -96,7 +97,6 @@ $Apps = @(
     "Microsoft.PowerToys",        # FancyZones, remapping, PowerRename, Always on Top osv.
     "OBSProject.OBSStudio", # # self explanatory
     "Python.Python.3.13", # Anbefalt 2026-2027, sjekk versjon støtte senere
-    "Spotify.Spotify", # self explanatory
     "Tailscale.Tailscale", # Egen cloud og remote desktop osv. skalerer inn startup
     "VideoLAN.VLC",               # Mediespiller, mest av nostalgiske grunner
 )
@@ -152,8 +152,95 @@ else {
 }
 ```
 
+# Strømisntillinger og annet
+```powershell
+# Slå aldri av skjermen
+powercfg /change monitor-timeout-ac 0
+powercfg /change monitor-timeout-dc 0
+
+# Gå aldri i dvale
+powercfg /change standby-timeout-ac 0
+powercfg /change standby-timeout-dc 0
+
+# Sikkre at hybernate er tilgjengelig
+powercfg /hibernate on
+
+# Når lokket lukkes ac/dc:
+# 0 = Gjør ingenting
+# 1 = Sleep
+# 2 = Hibernate
+# 3 = Shut down
+
+powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 2
+powercfg /setdcvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 2
+powercfg /setactive SCHEME_CURRENT
+
+# Slå av System Restore (snapshot på C:)
+Disable-ComputerRestore -Drive "C:\"
+```
+
+
+
+## Globale instillinger
+```powershell
+$MachineRegistry = @{
+    "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" = @{
+        AllowDevelopmentWithoutDevLicense = 1 # Developer Mode
+    }
+
+    "HKLM:\SOFTWARE\Policies\Microsoft\Dsh" = @{
+        AllowNewsAndInterests = 0 # Widgets av
+    }
+
+    "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI\BootAnimation" = @{
+        DisableStartupSound = 1 # Oppstartslyd av
+    }
+}
+```
+
+```powershell
+foreach ($Path in $MachineRegistry.Keys) {
+    if (-not (Test-Path $Path)) {
+        New-Item -Path $Path -Force | Out-Null
+    }
+
+    foreach ($Property in $MachineRegistry[$Path].GetEnumerator()) {
+        try {
+            $PropertyType = if ($Property.Value -is [string]) {
+                "String"
+            }
+            else {
+                "DWord"
+            }
+
+            New-ItemProperty `
+                -Path $Path `
+                -Name $Property.Key `
+                -Value $Property.Value `
+                -PropertyType $PropertyType `
+                -Force `
+                -ErrorAction Stop |
+                Out-Null
+
+            Write-Host `
+                "[OK] $Path\$($Property.Key) = $($Property.Value) [$PropertyType]" `
+                -ForegroundColor Green
+        }
+        catch {
+            Write-Host `
+                "[FAILED] $Path\$($Property.Key): $($_.Exception.Message)" `
+                -ForegroundColor Red
+        }
+    }
+}
+```
+
+
 Installer manuelt
-TEX, MSI, sett opp mobil deling
+- TEX
+- MSI
+- sett opp mobil deling, 
+- Nvidia App
 
 ## Brukere !!
 
@@ -168,6 +255,7 @@ $Users = @(
     @{
         Name        = "Gaming"
         Description = "Spill"
+        
     },
     @{
         Name        = "Student"
@@ -199,104 +287,715 @@ foreach ($User in $Users) {
 }
 ```
 
-
 ## Installere software:
-Funksjon som tar inn bruker name og matcher det med bruker
-```powershell
-```
+Funksjon som installer alle apps men bruker spesifikt.
+**Dev**
 
 ```powershell
-$dev_apps = @(
-gimp, incscape, audacity
+runas /user:.\Dev pwsh
 ```
+
+```powershell  
+$Apps = @(
+    "GIMP.GIMP",
+    "Inkscape.Inkscape",
+    "Audacity.Audacity",
+    "Spotify.Spotify", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+    "WhatsApp.WhatsApp", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+    "Discord.Discord" # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+)
+```
+```powershell  
+foreach ($App in @($Apps)) {
+
+    Write-Host "`n[INSTALLING] $App" -ForegroundColor Cyan
+
+    winget install `
+        --id $App `
+        --exact `
+        --scope user `
+        --silent `
+        --disable-interactivity `
+        --accept-package-agreements `
+        --accept-source-agreements
+
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "[OK] Installert: $App" -ForegroundColor Green
+    }
+    else {
+        Write-Host "[FAILED] $App" -ForegroundColor Red
+    }
+}
+```
+```powershell  
+
+
+$Registry = @{
+    "HKCU:\Control Panel\Mouse" = @{
+        MouseSensitivity = "13" # Ca. 65 til 70 % av Windows-slideren
+        MouseSpeed       = "0"  # Museakselerasjon av
+        MouseThreshold1  = "0"  # Akselerasjonsterskel av
+        MouseThreshold2  = "0"  # Akselerasjonsterskel av
+    }
+
+    "HKCU:\Control Panel\Accessibility\StickyKeys" = @{
+        Flags = "26" # Sticky Keys og tilhørende hurtigtast, ikon, låsing og lyd av
+    }
+
+    "HKCU:\Control Panel\Accessibility\Keyboard Response" = @{
+        AutoRepeatDelay       = "0"
+        AutoRepeatRate        = "0"
+        BounceTime            = "0"
+        DelayBeforeAcceptance = "0"
+        Flags                 = "26" # Filter Keys og hurtigtasten av
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" = @{
+        ToastEnabled           = 0 # Deaktiver varsler
+        LockScreenToastEnabled = 0 # Ingen varsler på låseskjermen
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\SearchSettings" = @{
+        IsGlobalWebSearchProviderToggleEnabled = 0 # Deaktiver webresultater fra søkeapper
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad" = @{
+        LeaveOnWithMouse           = [uint32]::MaxValue
+        PanEnabled                 = [uint32]::MaxValue
+        RightClickZoneEnabled      = [uint32]::MaxValue
+        TapAndDrag                 = [uint32]::MaxValue
+        TapsEnabled                = 0
+        TwoFingerTapEnabled       = 0
+        ZoomEnabled                = [uint32]::MaxValue
+    
+        FeedbackIntensity          = 50
+        ClickForceSensitivity      = 50
+        FeedbackEnabled            = [uint32]::MaxValue
+        HonorMouseAccelSetting     = 0
+    
+        RightClickZoneWidth        = 0
+        RightClickZoneHeight       = 0
+        EdgeAutoPanningEnabled     = 1
+        BoostedPanningEnabled      = 1
+        PanSensitivity             = 50
+        ZoomSensitivity            = 50
+        SingleFingerPanningMode    = 2
+        PressureAutoPanningEnabled = 1
+    
+        ThreeFingerSlideEnabled    = 65535
+        FourFingerSlideEnabled     = 65535
+    
+        ThreeFingerTapEnabled      = 0
+        CustomThreeFingerTap       = 0
+        ThreeFingerUp              = 0
+        ThreeFingerRight           = 0
+        ThreeFingerDown            = 0
+        ThreeFingerLeft            = 0
+    
+        FourFingerTapEnabled       = 0
+        CustomFourFingerTap        = 0
+        FourFingerUp               = 0
+        FourFingerRight            = 0
+        FourFingerLeft             = 0
+        FourFingerDown             = 0
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" = @{
+        MultiTaskingAltTabFilter = 3 # Alt+Tab viser kun åpne vinduer, aldri faner
+    }
+}
+```  
 
 ```powershell
-Install_dev_apps
-```
-Installer manuelt:
+foreach ($Path in $Registry.Keys) {
+    if (-not (Test-Path $Path)) {
+        New-Item -Path $Path -Force | Out-Null
+    }
 
+    foreach ($Property in $Registry[$Path].GetEnumerator()) {
+        try {
+            $PropertyType = if ($Property.Value -is [string]) {
+                "String"
+            }
+            else {
+                "DWord"
+            }
+
+            New-ItemProperty `
+                -Path $Path `
+                -Name $Property.Key `
+                -Value $Property.Value `
+                -PropertyType $PropertyType `
+                -Force `
+                -ErrorAction Stop |
+                Out-Null
+
+            Write-Host `
+                "[OK] $Path\$($Property.Key) = $($Property.Value) [$PropertyType]" `
+                -ForegroundColor Green
+        }
+        catch {
+            Write-Host `
+                "[FAILED] $Path\$($Property.Key): $($_.Exception.Message)" `
+                -ForegroundColor Red
+        }
+    }
+}
+```
+
+
+```powershell  
+# Funksjoner som har egne komandoer eller av andre grunne er bedre å endre med skript
+
+
+# Kontrollpanel → Lyd → Lyder → Ingen lyder → OK
+Set-Item `
+    -Path "HKCU:\AppEvents\Schemes" `
+    -Value ".None"
+
+```  
+# Kan ikke automatiseres eller det er ikke verdt det
+# Innstillinger -> skjerm -> lysstyrke og farge
+git config --global user.name ""
+git config --global user.email ""
 **Gaming**
-- Battlenet.net -> sc2
-- Steam
 
-**Student**
-- Office 365
-- Zoom
-- Teams
-- Slack
+```powershell
+runas /user:.\Gaming pwsh
+```
 
-**Frivillig**
-- Office 365
-- Teams
+```powershell  
+$Apps = @(
+    "Valve.Steam",
+    "Blizzard.BattleNet",
+    "Spotify.Spotify", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+    "WhatsApp.WhatsApp," # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+    "Discord.Discord" # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+)
+```
+```powershell  
+foreach ($App in @($Apps)) {
 
-- Logg in med ulike brukere brukernavn**+student**@leverandør.xx
+    Write-Host "`n[INSTALLING] $App" -ForegroundColor Cyan
 
+    winget install `
+        --id $App `
+        --exact `
+        --scope user `
+        --silent `
+        --disable-interactivity `
+        --accept-package-agreements `
+        --accept-source-agreements
 
-# Konfigurering
-
-- Finn ut hvordan man omvender fn tasten for å få rask tilgang til f tastene.(og sc2)
-- Nvidia App
-- Instillinger -> skjerm -> lysstyrke og farge
-- Innstillinger -> System -> Strøm og dvalemodus -> Avanserte
-- Kontrollpanel → Lyd → Lyder → Ingen lyder → OK
-- Kjør (Win + R) → sysdm.cpl → Avansert → Ytelse → Innstillinger → Juster for best ytelse(fjern: animasjoner, skygge og fade effects) → Bruk & OK
-- Win + R -> control input.dll -> Advanced Key Settings -> Change Key Sequence -> Sett alt til Not Assigned hvis du vil deaktivere hurtigtaster for språkbytte.
-- Dessverre er innstillingen for bakgrunds-kjøring inne på hver app i Windows 11, så du må gå inn i hver relevant app og deaktivere. Stort sett kan du la det være, men bakgrunnapper stjeler batterilevetid.
-- Ctrl + Shift + Esc → Oppgavebehandling → Oppstart → Høyreklikk app → Deaktiver
-- Innstillinger → System → Varslinger → Skru av varsler
-- Instillinger -> Personvern og instillinger -> Søketilatelser -> La søkeapper vise resultater -> Av
-evt innstillingsknapp i oppgavemenyen
-- Slå av pekertapping på touchpad
-- Fjerne faner fra alt-tab Instillinger -> System -> Fleroppgavevisning -> Skru av "vis faner fra apper når du trykker alt + tab"
-- Fra oppstartsmenyen ctrl + shift + esc - deaktivere Xbox, Steam, OneDrive, Microsoft 365 Copilot, Microsoft Teams, MSI Center, Killer Intelligence Center, Terminal og eventuelt Telefonkobling.
-- Instillinger - > Personalisering -> låseskjerm -> bakgrunnsbilde -> velg bilde # Gjør at windows slutter å laste end masse bilder for så å slette dem.
-- Instillinger -> System -> Fleroppgavekjøring -> ikke vis faner når en trykker alt tab.
-
-
-
-taskschd.msc -> Microsoft -> XblGameSave -> Disable #XBOX åpner seg hver gang pcen blir inaktiv for å sjekke om den skal lagre spill og er hardkodet til os'et.
-
-- deaktiver filtertaster hotkey
-- deaktiver trege taster hotkey
-- slå av pekerpresisjon
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "[OK] Installert: $App" -ForegroundColor Green
+    }
+    else {
+        Write-Host "[FAILED] $App" -ForegroundColor Red
+    }
+}
+```
+```powershell  
 
 
-Installer -> power toys -> og fjern popup spam knapper som ikke er ønskelig. Coopilot knappen som ertatter ctrl knappen.
-Disable Widgets
-Disable Copilot if you don't use it.
-Disable Game DVR
-- Settings
-- Gaming
-- Captures
+$Registry = @{
+    "HKCU:\Control Panel\Mouse" = @{
+        MouseSensitivity = "13" # Ca. 65 til 70 % av Windows-slideren
+        MouseSpeed       = "0"  # Museakselerasjon av
+        MouseThreshold1  = "0"  # Akselerasjonsterskel av
+        MouseThreshold2  = "0"  # Akselerasjonsterskel av
+    }
 
-enable system restore
+    "HKCU:\Control Panel\Accessibility\StickyKeys" = @{
+        Flags = "26" # Sticky Keys og tilhørende hurtigtast, ikon, låsing og lyd av
+    }
 
-enable bitlocker 
+    "HKCU:\Control Panel\Accessibility\Keyboard Response" = @{
+        AutoRepeatDelay       = "0"
+        AutoRepeatRate        = "0"
+        BounceTime            = "0"
+        DelayBeforeAcceptance = "0"
+        Flags                 = "26" # Filter Keys og hurtigtasten av
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" = @{
+        ToastEnabled           = 0 # Deaktiver varsler
+        LockScreenToastEnabled = 0 # Ingen varsler på låseskjermen
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\SearchSettings" = @{
+        IsGlobalWebSearchProviderToggleEnabled = 0 # Deaktiver webresultater fra søkeapper
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad" = @{
+        LeaveOnWithMouse           = [uint32]::MaxValue
+        PanEnabled                 = [uint32]::MaxValue
+        RightClickZoneEnabled      = [uint32]::MaxValue
+        TapAndDrag                 = [uint32]::MaxValue
+        TapsEnabled                = 0
+        TwoFingerTapEnabled       = 0
+        ZoomEnabled                = [uint32]::MaxValue
+    
+        FeedbackIntensity          = 50
+        ClickForceSensitivity      = 50
+        FeedbackEnabled            = [uint32]::MaxValue
+        HonorMouseAccelSetting     = 0
+    
+        RightClickZoneWidth        = 0
+        RightClickZoneHeight       = 0
+        EdgeAutoPanningEnabled     = 1
+        BoostedPanningEnabled      = 1
+        PanSensitivity             = 50
+        ZoomSensitivity            = 50
+        SingleFingerPanningMode    = 2
+        PressureAutoPanningEnabled = 1
+    
+        ThreeFingerSlideEnabled    = 65535
+        FourFingerSlideEnabled     = 65535
+    
+        ThreeFingerTapEnabled      = 0
+        CustomThreeFingerTap       = 0
+        ThreeFingerUp              = 0
+        ThreeFingerRight           = 0
+        ThreeFingerDown            = 0
+        ThreeFingerLeft            = 0
+    
+        FourFingerTapEnabled       = 0
+        CustomFourFingerTap        = 0
+        FourFingerUp               = 0
+        FourFingerRight            = 0
+        FourFingerLeft             = 0
+        FourFingerDown             = 0
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" = @{
+        MultiTaskingAltTabFilter = 3 # Alt+Tab viser kun åpne vinduer, aldri faner
+    }
 
-Set PowerShell 7 as default in w terminal
 
-Enable Developer Mode -> Settings → System → For developers
+}
+```  
 
-Git git config --global user.name ""
+```powershell
+foreach ($Path in $Registry.Keys) {
+    if (-not (Test-Path $Path)) {
+        New-Item -Path $Path -Force | Out-Null
+    }
+
+    foreach ($Property in $Registry[$Path].GetEnumerator()) {
+        try {
+            $PropertyType = if ($Property.Value -is [string]) {
+                "String"
+            }
+            else {
+                "DWord"
+            }
+
+            New-ItemProperty `
+                -Path $Path `
+                -Name $Property.Key `
+                -Value $Property.Value `
+                -PropertyType $PropertyType `
+                -Force `
+                -ErrorAction Stop |
+                Out-Null
+
+            Write-Host `
+                "[OK] $Path\$($Property.Key) = $($Property.Value) [$PropertyType]" `
+                -ForegroundColor Green
+        }
+        catch {
+            Write-Host `
+                "[FAILED] $Path\$($Property.Key): $($_.Exception.Message)" `
+                -ForegroundColor Red
+        }
+    }
+}
+```
+
+
+```powershell  
+# Funksjoner som har egne komandoer eller av andre grunne er bedre å endre med skript
+
+
+# Kontrollpanel → Lyd → Lyder → Ingen lyder → OK
+Set-Item `
+    -Path "HKCU:\AppEvents\Schemes" `
+    -Value ".None"
+
+```  
+# Kan ikke automatiseres eller det er ikke verdt det
+# Innstillinger -> skjerm -> lysstyrke og farge
+git config --global user.name ""
 git config --global user.email ""
 
-Enhanced indexing off
+**Student**
 
-OneDrive uninstall
+```powershell
+runas /user:.\Student pwsh
+```
 
-Refreshrate check
+```powershell  
+$Apps = @(
+    "Microsoft.Office",
+    "Microsoft.OneDrive",
+    "Microsoft.Teams",
+    "Zoom.Zoom",
+    "SlackTechnologies.Slack",
+    "Spotify.Spotify", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+    "WhatsApp.WhatsApp", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+    "Discord.Discord" # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+)
+```
+```powershell  
+foreach ($App in @($Apps)) {
 
-Windows power plan -> max
+    Write-Host "`n[INSTALLING] $App" -ForegroundColor Cyan
 
-NVIDIA Control Panel
+    winget install `
+        --id $App `
+        --exact `
+        --scope user `
+        --silent `
+        --disable-interactivity `
+        --accept-package-agreements `
+        --accept-source-agreements
 
-For SC2 specifically I'd test:
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "[OK] Installert: $App" -ForegroundColor Green
+    }
+    else {
+        Write-Host "[FAILED] $App" -ForegroundColor Red
+    }
+}
+```
+```powershell  
 
+
+$Registry = @{
+    "HKCU:\Control Panel\Mouse" = @{
+        MouseSensitivity = "13" # Ca. 65 til 70 % av Windows-slideren
+        MouseSpeed       = "0"  # Museakselerasjon av
+        MouseThreshold1  = "0"  # Akselerasjonsterskel av
+        MouseThreshold2  = "0"  # Akselerasjonsterskel av
+    }
+
+    "HKCU:\Control Panel\Accessibility\StickyKeys" = @{
+        Flags = "26" # Sticky Keys og tilhørende hurtigtast, ikon, låsing og lyd av
+    }
+
+    "HKCU:\Control Panel\Accessibility\Keyboard Response" = @{
+        AutoRepeatDelay       = "0"
+        AutoRepeatRate        = "0"
+        BounceTime            = "0"
+        DelayBeforeAcceptance = "0"
+        Flags                 = "26" # Filter Keys og hurtigtasten av
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" = @{
+        ToastEnabled           = 0 # Deaktiver varsler
+        LockScreenToastEnabled = 0 # Ingen varsler på låseskjermen
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\SearchSettings" = @{
+        IsGlobalWebSearchProviderToggleEnabled = 0 # Deaktiver webresultater fra søkeapper
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad" = @{
+        LeaveOnWithMouse           = [uint32]::MaxValue
+        PanEnabled                 = [uint32]::MaxValue
+        RightClickZoneEnabled      = [uint32]::MaxValue
+        TapAndDrag                 = [uint32]::MaxValue
+        TapsEnabled                = 0
+        TwoFingerTapEnabled       = 0
+        ZoomEnabled                = [uint32]::MaxValue
+    
+        FeedbackIntensity          = 50
+        ClickForceSensitivity      = 50
+        FeedbackEnabled            = [uint32]::MaxValue
+        HonorMouseAccelSetting     = 0
+    
+        RightClickZoneWidth        = 0
+        RightClickZoneHeight       = 0
+        EdgeAutoPanningEnabled     = 1
+        BoostedPanningEnabled      = 1
+        PanSensitivity             = 50
+        ZoomSensitivity            = 50
+        SingleFingerPanningMode    = 2
+        PressureAutoPanningEnabled = 1
+    
+        ThreeFingerSlideEnabled    = 65535
+        FourFingerSlideEnabled     = 65535
+    
+        ThreeFingerTapEnabled      = 0
+        CustomThreeFingerTap       = 0
+        ThreeFingerUp              = 0
+        ThreeFingerRight           = 0
+        ThreeFingerDown            = 0
+        ThreeFingerLeft            = 0
+    
+        FourFingerTapEnabled       = 0
+        CustomFourFingerTap        = 0
+        FourFingerUp               = 0
+        FourFingerRight            = 0
+        FourFingerLeft             = 0
+        FourFingerDown             = 0
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" = @{
+        MultiTaskingAltTabFilter = 3 # Alt+Tab viser kun åpne vinduer, aldri faner
+    }
+
+
+}
+```  
+
+```powershell
+foreach ($Path in $Registry.Keys) {
+    if (-not (Test-Path $Path)) {
+        New-Item -Path $Path -Force | Out-Null
+    }
+
+    foreach ($Property in $Registry[$Path].GetEnumerator()) {
+        try {
+            $PropertyType = if ($Property.Value -is [string]) {
+                "String"
+            }
+            else {
+                "DWord"
+            }
+
+            New-ItemProperty `
+                -Path $Path `
+                -Name $Property.Key `
+                -Value $Property.Value `
+                -PropertyType $PropertyType `
+                -Force `
+                -ErrorAction Stop |
+                Out-Null
+
+            Write-Host `
+                "[OK] $Path\$($Property.Key) = $($Property.Value) [$PropertyType]" `
+                -ForegroundColor Green
+        }
+        catch {
+            Write-Host `
+                "[FAILED] $Path\$($Property.Key): $($_.Exception.Message)" `
+                -ForegroundColor Red
+        }
+    }
+}
+```
+
+
+```powershell  
+# Funksjoner som har egne komandoer eller av andre grunne er bedre å endre med skript
+
+
+# Kontrollpanel → Lyd → Lyder → Ingen lyder → OK
+Set-Item `
+    -Path "HKCU:\AppEvents\Schemes" `
+    -Value ".None"
+
+```  
+# Kan ikke automatiseres eller det er ikke verdt det
+# Innstillinger -> skjerm -> lysstyrke og farge
+git config --global user.name ""
+git config --global user.email ""
+
+**Frivillig**
+
+```powershell
+runas /user:.\Frivillig pwsh
+```
+
+```powershell  
+$Apps = @(
+    "Microsoft.Office",
+    "Microsoft.Teams",
+    "Zoom.Zoom",
+    "Spotify.Spotify", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+    "WhatsApp.WhatsApp", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+    "Discord.Discord" # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+)
+```
+```powershell  
+foreach ($App in @($Apps)) {
+
+    Write-Host "`n[INSTALLING] $App" -ForegroundColor Cyan
+
+    winget install `
+        --id $App `
+        --exact `
+        --scope user `
+        --silent `
+        --disable-interactivity `
+        --accept-package-agreements `
+        --accept-source-agreements
+
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "[OK] Installert: $App" -ForegroundColor Green
+    }
+    else {
+        Write-Host "[FAILED] $App" -ForegroundColor Red
+    }
+}
+```
+```powershell  
+
+
+$Registry = @{
+    "HKCU:\Control Panel\Mouse" = @{
+        MouseSensitivity = "13" # Ca. 65 til 70 % av Windows-slideren
+        MouseSpeed       = "0"  # Museakselerasjon av
+        MouseThreshold1  = "0"  # Akselerasjonsterskel av
+        MouseThreshold2  = "0"  # Akselerasjonsterskel av
+    }
+
+    "HKCU:\Control Panel\Accessibility\StickyKeys" = @{
+        Flags = "26" # Sticky Keys og tilhørende hurtigtast, ikon, låsing og lyd av
+    }
+
+    "HKCU:\Control Panel\Accessibility\Keyboard Response" = @{
+        AutoRepeatDelay       = "0"
+        AutoRepeatRate        = "0"
+        BounceTime            = "0"
+        DelayBeforeAcceptance = "0"
+        Flags                 = "26" # Filter Keys og hurtigtasten av
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\PushNotifications" = @{
+        ToastEnabled           = 0 # Deaktiver varsler
+        LockScreenToastEnabled = 0 # Ingen varsler på låseskjermen
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\SearchSettings" = @{
+        IsGlobalWebSearchProviderToggleEnabled = 0 # Deaktiver webresultater fra søkeapper
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad" = @{
+        LeaveOnWithMouse           = [uint32]::MaxValue
+        PanEnabled                 = [uint32]::MaxValue
+        RightClickZoneEnabled      = [uint32]::MaxValue
+        TapAndDrag                 = [uint32]::MaxValue
+        TapsEnabled                = 0
+        TwoFingerTapEnabled       = 0
+        ZoomEnabled                = [uint32]::MaxValue
+    
+        FeedbackIntensity          = 50
+        ClickForceSensitivity      = 50
+        FeedbackEnabled            = [uint32]::MaxValue
+        HonorMouseAccelSetting     = 0
+    
+        RightClickZoneWidth        = 0
+        RightClickZoneHeight       = 0
+        EdgeAutoPanningEnabled     = 1
+        BoostedPanningEnabled      = 1
+        PanSensitivity             = 50
+        ZoomSensitivity            = 50
+        SingleFingerPanningMode    = 2
+        PressureAutoPanningEnabled = 1
+    
+        ThreeFingerSlideEnabled    = 65535
+        FourFingerSlideEnabled     = 65535
+    
+        ThreeFingerTapEnabled      = 0
+        CustomThreeFingerTap       = 0
+        ThreeFingerUp              = 0
+        ThreeFingerRight           = 0
+        ThreeFingerDown            = 0
+        ThreeFingerLeft            = 0
+    
+        FourFingerTapEnabled       = 0
+        CustomFourFingerTap        = 0
+        FourFingerUp               = 0
+        FourFingerRight            = 0
+        FourFingerLeft             = 0
+        FourFingerDown             = 0
+    }
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" = @{
+        MultiTaskingAltTabFilter = 3 # Alt+Tab viser kun åpne vinduer, aldri faner
+    }
+
+
+}
+```  
+
+```powershell
+foreach ($Path in $Registry.Keys) {
+    if (-not (Test-Path $Path)) {
+        New-Item -Path $Path -Force | Out-Null
+    }
+
+    foreach ($Property in $Registry[$Path].GetEnumerator()) {
+        try {
+            $PropertyType = if ($Property.Value -is [string]) {
+                "String"
+            }
+            else {
+                "DWord"
+            }
+
+            New-ItemProperty `
+                -Path $Path `
+                -Name $Property.Key `
+                -Value $Property.Value `
+                -PropertyType $PropertyType `
+                -Force `
+                -ErrorAction Stop |
+                Out-Null
+
+            Write-Host `
+                "[OK] $Path\$($Property.Key) = $($Property.Value) [$PropertyType]" `
+                -ForegroundColor Green
+        }
+        catch {
+            Write-Host `
+                "[FAILED] $Path\$($Property.Key): $($_.Exception.Message)" `
+                -ForegroundColor Red
+        }
+    }
+}
+```
+
+
+```powershell  
+# Funksjoner som har egne komandoer eller av andre grunne er bedre å endre med skript
+
+
+# Kontrollpanel → Lyd → Lyder → Ingen lyder → OK
+Set-Item `
+    -Path "HKCU:\AppEvents\Schemes" `
+    -Value ".None"
+
+```  
+# Kan ikke automatiseres eller det er ikke verdt det
+# Innstillinger -> skjerm -> lysstyrke og farge
+git config --global user.name ""
+git config --global user.email ""
+
+
+Installer manuelt:
+**Dev**
+Fjern onedrive hvis det finnes.
+- Logg inn med riktig mail+name@gmail.com
+Power Management → konservativ, batteritid
+
+**Gaming**
+- sc2
+- Logg inn med riktig mail+name@gmail.com
+```
 Power Management → Prefer maximum performance
 Low Latency Mode → Off / On / Ultra (benchmark all three)
 V-Sync → Off
 Maximum Frame Rate → Off (unless needed) -> (lapptop only have 60 fps)
 G-SYNC configuration if your display supports it
+```
+Refreshrate check overclock monitor !!
 
-Student bruker
-Office 365
+**Student**
+- Logg inn med riktig mail+name@gmail.com
+
+**Frivillig**
+- Logg inn med riktig mail+name@gmail.com
+
+
+# After setting up dualboot
+enable bitlocker 
+Enhanced indexing off - of by deafult 
+Fix bios settings
+
+# Todo
+## Konfigurering
+
+
+- Finn ut hvordan man omvender fn tasten for å få rask tilgang til f tastene.(og sc2) - Bios
+- Kjør (Win + R) → sysdm.cpl → Avansert → Ytelse → Innstillinger → Juster for best ytelse(fjern: animasjoner, skygge og fade effects) → Bruk & OK
+- Win + R -> control input.dll -> Advanced Key Settings -> Change Key Sequence -> Sett alt til Not Assigned hvis du vil deaktivere hurtigtaster for språkbytte.
+- Ctrl + Shift + Esc → Oppgavebehandling → Oppstart → Høyreklikk app → Deaktiver
+- Sett pwsh 7 som default i terminal -> Åpne Windows Terminal → Klikk pilen ved siden av ny fane-knappen → Settings → Startup → Default profile → PowerShell
