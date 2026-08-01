@@ -264,23 +264,37 @@ $Users = @(
 ```
 Lag brukere:
 ```powershell
+$UsersGroup = Get-LocalGroup -SID "S-1-5-32-545"
+
 foreach ($User in $Users) {
-    if (Get-LocalUser -Name $User.Name -ErrorAction SilentlyContinue) {
-        Write-Host "[INFO] Brukeren finnes allerede: $($User.Name)" -ForegroundColor Yellow
-        continue
+    if (-not (Get-LocalUser -Name $User.Name -ErrorAction SilentlyContinue)) {
+        $Password = Read-Host "Skriv passord for $($User.Name)" -AsSecureString
+
+        New-LocalUser `
+            -Name $User.Name `
+            -PasswordNeverExpires $true `
+            -Password $Password `
+            -Description $User.Description `
+            -AccountNeverExpires
+
+        net user $User.Name /passwordreq:yes | Out-Null
     }
 
-    $Password = Read-Host "Skriv passord for $($User.Name)" -AsSecureString
+    $LocalUser = Get-LocalUser -Name $User.Name
 
-    New-LocalUser `
-        -Name $User.Name `
-        -Password $Password `
-        -Description $User.Description `
-        -AccountNeverExpires
+    if (-not (Get-LocalGroupMember -SID "S-1-5-32-545" |
+        Where-Object Name -eq "$env:COMPUTERNAME\$($User.Name)")) {
 
-    Write-Host "[OK] Opprettet bruker: $($User.Name)" -ForegroundColor Green
+        Add-LocalGroupMember `
+            -Group $UsersGroup.Name `
+            -Member $LocalUser
+    }
+
+    Write-Host "[OK] Brukeren er klar: $($User.Name)" -ForegroundColor Green
 }
 ```
+
+# Logg inn på hver bruker via GUI -> ctrl + alt + delete -> switch users -> Sjekk at C:\Users\xx opprettes
 
 ## Installere software:
 Funksjon som installer alle apps men bruker spesifikt.
