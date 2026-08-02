@@ -296,9 +296,14 @@ foreach ($User in $Users) {
 
 # Logg inn på hver bruker via GUI -> ctrl + alt + delete -> switch users -> Sjekk at C:\Users\xx opprettes
 
+# Restart
+
+
+
 ## Installere software:
 Funksjon som installer alle apps men bruker spesifikt.
 **Dev**
+
 
 ```
 Innlogget som annen bruker 
@@ -306,13 +311,28 @@ eller
 search -> powershell -> open file location -> shit -> høyreklikk -> run as other user
 ```
 
+### Microsoft.Winget.Source var installert på maskinen, men ikke registrert for brukerene. Etter at du registrerte manifestet som bruker, virker Winget-kilden igjen.
+```powershell
+$Manifest = "C:\Program Files\WindowsApps\Microsoft.Winget.Source_2026.802.658.5_neutral__8wekyb3d8bbwe\AppxManifest.xml" # Obs du må finne igjen stien i admin, denne blir utdatert.
+
+if (-not (Get-AppxPackage Microsoft.Winget.Source)) {
+    Add-AppxPackage `
+        -Register $Manifest `
+        -DisableDevelopmentMode `
+        -ErrorAction Stop
+
+    Write-Host "[OK] WinGet-kilden er registrert for brukeren." -ForegroundColor Green
+}
+else {
+    Write-Host "[INFO] WinGet-kilden er allerede registrert." -ForegroundColor Yellow
+}
+```
+
 ```powershell  
 $Apps = @(
     "GIMP.GIMP",
-    "Inkscape.Inkscape",
     "Audacity.Audacity",
     "Spotify.Spotify", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
-    "WhatsApp.WhatsApp", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
     "Discord.Discord" # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
 )
 ```
@@ -328,7 +348,8 @@ foreach ($App in @($Apps)) {
         --silent `
         --disable-interactivity `
         --accept-package-agreements `
-        --accept-source-agreements
+        --accept-source-agreements `
+        --source winget
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host "[OK] Installert: $App" -ForegroundColor Green
@@ -338,6 +359,8 @@ foreach ($App in @($Apps)) {
     }
 }
 ```
+
+
 ```powershell  
 
 
@@ -461,10 +484,7 @@ Set-Item `
     -Value ".None"
 
 ```  
-# Kan ikke automatiseres eller det er ikke verdt det
-# Innstillinger -> skjerm -> lysstyrke og farge
-git config --global user.name ""
-git config --global user.email ""
+
 **Gaming**
 
 ```
@@ -472,14 +492,26 @@ Innlogget som annen bruker
 eller 
 search -> powershell -> open file location -> shit -> høyreklikk -> run as other user
 ```
+### Microsoft.Winget.Source var installert på maskinen, men ikke registrert for brukerene. Etter at du registrerte manifestet som bruker, virker Winget-kilden igjen.
+```powershell
+$Manifest = "C:\Program Files\WindowsApps\Microsoft.Winget.Source_2026.802.658.5_neutral__8wekyb3d8bbwe\AppxManifest.xml" # Obs du må finne igjen stien i admin, denne blir utdatert.
 
+if (-not (Get-AppxPackage Microsoft.Winget.Source)) {
+    Add-AppxPackage `
+        -Register $Manifest `
+        -DisableDevelopmentMode `
+        -ErrorAction Stop
+
+    Write-Host "[OK] WinGet-kilden er registrert for brukeren." -ForegroundColor Green
+}
+else {
+    Write-Host "[INFO] WinGet-kilden er allerede registrert." -ForegroundColor Yellow
+}
+```
 
 ```powershell  
 $Apps = @(
-    "Valve.Steam",
-    "Blizzard.BattleNet",
     "Spotify.Spotify", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
-    "WhatsApp.WhatsApp," # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
     "Discord.Discord" # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
 )
 ```
@@ -495,8 +527,8 @@ foreach ($App in @($Apps)) {
         --silent `
         --disable-interactivity `
         --accept-package-agreements `
-        --accept-source-agreements
-
+        --accept-source-agreements `
+        --source winget
     if ($LASTEXITCODE -eq 0) {
         Write-Host "[OK] Installert: $App" -ForegroundColor Green
     }
@@ -630,10 +662,6 @@ Set-Item `
     -Value ".None"
 
 ```  
-# Kan ikke automatiseres eller det er ikke verdt det
-# Innstillinger -> skjerm -> lysstyrke og farge
-git config --global user.name ""
-git config --global user.email ""
 
 **Student**
 
@@ -643,17 +671,29 @@ eller
 search -> powershell -> open file location -> shit -> høyreklikk -> run as other user
 ```
 
+### Microsoft.Winget.Source var installert på maskinen, men ikke registrert for brukerene. Etter at du registrerte manifestet som bruker, virker Winget-kilden igjen.
+```powershell
+$Manifest = "C:\Program Files\WindowsApps\Microsoft.Winget.Source_2026.802.658.5_neutral__8wekyb3d8bbwe\AppxManifest.xml" # Obs du må finne igjen stien i admin, denne blir utdatert.
+
+if (-not (Get-AppxPackage Microsoft.Winget.Source)) {
+    Add-AppxPackage `
+        -Register $Manifest `
+        -DisableDevelopmentMode `
+        -ErrorAction Stop
+
+    Write-Host "[OK] WinGet-kilden er registrert for brukeren." -ForegroundColor Green
+}
+else {
+    Write-Host "[INFO] WinGet-kilden er allerede registrert." -ForegroundColor Yellow
+}
+```
 
 ```powershell  
 $Apps = @(
-    "Microsoft.Office",
     "Microsoft.OneDrive",
     "Microsoft.Teams",
-    "Zoom.Zoom",
     "SlackTechnologies.Slack",
-    "Zotero.Zotero",
     "Spotify.Spotify", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
-    "WhatsApp.WhatsApp", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
     "Discord.Discord" # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
 )
 ```
@@ -669,7 +709,8 @@ foreach ($App in @($Apps)) {
         --silent `
         --disable-interactivity `
         --accept-package-agreements `
-        --accept-source-agreements
+        --accept-source-agreements `
+        --source winget
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host "[OK] Installert: $App" -ForegroundColor Green
@@ -804,10 +845,7 @@ Set-Item `
     -Value ".None"
 
 ```  
-# Kan ikke automatiseres eller det er ikke verdt det
-# Innstillinger -> skjerm -> lysstyrke og farge
-git config --global user.name ""
-git config --global user.email ""
+
 
 **Frivillig**
 
@@ -817,14 +855,27 @@ eller
 search -> powershell -> open file location -> shit -> høyreklikk -> run as other user
 ```
 
+### Microsoft.Winget.Source var installert på maskinen, men ikke registrert for brukerene. Etter at du registrerte manifestet som bruker, virker Winget-kilden igjen.
+```powershell
+$Manifest = "C:\Program Files\WindowsApps\Microsoft.Winget.Source_2026.802.658.5_neutral__8wekyb3d8bbwe\AppxManifest.xml" # Obs du må finne igjen stien i admin, denne blir utdatert.
+
+if (-not (Get-AppxPackage Microsoft.Winget.Source)) {
+    Add-AppxPackage `
+        -Register $Manifest `
+        -DisableDevelopmentMode `
+        -ErrorAction Stop
+
+    Write-Host "[OK] WinGet-kilden er registrert for brukeren." -ForegroundColor Green
+}
+else {
+    Write-Host "[INFO] WinGet-kilden er allerede registrert." -ForegroundColor Yellow
+}
+```
 
 ```powershell  
 $Apps = @(
-    "Microsoft.Office",
     "Microsoft.Teams",
-    "Zoom.Zoom",
     "Spotify.Spotify", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
-    "WhatsApp.WhatsApp", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
     "Discord.Discord" # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
 )
 ```
@@ -840,7 +891,8 @@ foreach ($App in @($Apps)) {
         --silent `
         --disable-interactivity `
         --accept-package-agreements `
-        --accept-source-agreements
+        --accept-source-agreements `
+        --source winget
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host "[OK] Installert: $App" -ForegroundColor Green
@@ -975,10 +1027,6 @@ Set-Item `
     -Value ".None"
 
 ```  
-# Kan ikke automatiseres eller det er ikke verdt det
-# Innstillinger -> skjerm -> lysstyrke og farge
-git config --global user.name ""
-git config --global user.email ""
 
 
 Installer manuelt:
@@ -986,8 +1034,22 @@ Installer manuelt:
 Fjern onedrive hvis det finnes.
 - Logg inn med riktig mail+name@gmail.com
 Power Management → konservativ, batteritid
+# Kan ikke automatiseres eller det er ikke verdt det
+    "Inkscape.Inkscape",
+    "WhatsApp.WhatsApp", 
+# Innstillinger -> skjerm -> lysstyrke og farge
+git config --global user.name ""
+git config --global user.email ""
 
 **Gaming**
+# Kan ikke automatiseres eller det er ikke verdt det
+    "Valve.Steam",
+    "Blizzard.BattleNet",
+    "WhatsApp.WhatsApp," # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+# Innstillinger -> skjerm -> lysstyrke og farge
+git config --global user.name ""
+git config --global user.email ""
+
 - sc2
 - Logg inn med riktig mail+name@gmail.com
 ```
@@ -1000,9 +1062,25 @@ G-SYNC configuration if your display supports it
 Refreshrate check overclock monitor !!
 
 **Student**
-- Logg inn med riktig mail+name@gmail.com
+- Logg inn med riktig mail+name@gmail.com eller Skolemail
+# Kan ikke automatiseres eller det er ikke verdt det
+    "Microsoft.Office",
+    "Zotero.Zotero",
+    "Zoom.Zoom",
+    "WhatsApp.WhatsApp", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+# Innstillinger -> skjerm -> lysstyrke og farge
+git config --global user.name ""
+git config --global user.email ""
 
 **Frivillig**
+# Kan ikke automatiseres eller det er ikke verdt det
+    "Microsoft.Office",
+    "Zoom.Zoom",
+    "WhatsApp.WhatsApp", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
+# Innstillinger -> skjerm -> lysstyrke og farge
+git config --global user.name ""
+git config --global user.email ""
+
 - Logg inn med riktig mail+name@gmail.com
 
 
