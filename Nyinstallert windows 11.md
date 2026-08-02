@@ -30,6 +30,7 @@ $BloatwareApps = @(
     "*BingWeather*",                     # Vær-appen. Unødvendig hvis du bruker nettleser.
     "*BingNews*",                        # Nyhetsapp med Microsoft-feed.
     "*BingSearch*",                      # Bing-integrasjon i Windows-søk.
+    "Posit.Quarto",                      # Skriveprogram
     "*Microsoft.Copilot*",               # Microsoft Copilot. Reklame/AI-assistent hvis du ikke bruker den.
     "*Microsoft.GetHelp*",               # "Få hjelp"-appen. Kan erstattes med Google.
     "*Microsoft.Getstarted*",            # Windows introduksjonsguide. Kun nyttig første gang.
@@ -330,8 +331,8 @@ else {
 
 ```powershell  
 $Apps = @(
-    "GIMP.GIMP",
-    "Audacity.Audacity",
+    "GIMP.GIMP", 
+    "Audacity.Audacity", # Lydopptak og redigering
     "Spotify.Spotify", # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
     "Discord.Discord" # er brukerspesifikk og installeres i locale, må kanskje derfor ligge i alle
 )
@@ -482,6 +483,13 @@ foreach ($Path in $Registry.Keys) {
 Set-Item `
     -Path "HKCU:\AppEvents\Schemes" `
     -Value ".None"
+
+# Vs code extensions
+code --install-extension quarto.quarto
+
+# Dev enviroment
+python -m pip install --upgrade pip
+python -m pip install jupyterlab ipykernel
 
 ```  
 
@@ -843,6 +851,13 @@ foreach ($Path in $Registry.Keys) {
 Set-Item `
     -Path "HKCU:\AppEvents\Schemes" `
     -Value ".None"
+
+# Vs code extensions
+code --install-extension quarto.quarto
+
+# Dev enviroment
+python -m pip install --upgrade pip
+python -m pip install jupyterlab ipykernel
 
 ```  
 
