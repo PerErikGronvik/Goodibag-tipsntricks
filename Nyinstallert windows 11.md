@@ -300,8 +300,10 @@ foreach ($User in $Users) {
 Funksjon som installer alle apps men bruker spesifikt.
 **Dev**
 
-```powershell
-runas /user:.\Dev pwsh
+```
+Innlogget som annen bruker 
+eller 
+search -> powershell -> open file location -> shit -> høyreklikk -> run as other user
 ```
 
 ```powershell  
@@ -465,9 +467,12 @@ git config --global user.name ""
 git config --global user.email ""
 **Gaming**
 
-```powershell
-runas /user:.\Gaming pwsh
 ```
+Innlogget som annen bruker 
+eller 
+search -> powershell -> open file location -> shit -> høyreklikk -> run as other user
+```
+
 
 ```powershell  
 $Apps = @(
@@ -632,9 +637,12 @@ git config --global user.email ""
 
 **Student**
 
-```powershell
-runas /user:.\Student pwsh
 ```
+Innlogget som annen bruker 
+eller 
+search -> powershell -> open file location -> shit -> høyreklikk -> run as other user
+```
+
 
 ```powershell  
 $Apps = @(
@@ -803,9 +811,12 @@ git config --global user.email ""
 
 **Frivillig**
 
-```powershell
-runas /user:.\Frivillig pwsh
 ```
+Innlogget som annen bruker 
+eller 
+search -> powershell -> open file location -> shit -> høyreklikk -> run as other user
+```
+
 
 ```powershell  
 $Apps = @(
